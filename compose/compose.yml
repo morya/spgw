@@ -1,5 +1,5 @@
 networks:
-  eagle:
+  spgw:
     name: spgw
 
 services:
