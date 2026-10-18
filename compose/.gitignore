@@ -1,0 +1,9 @@
+# ─── 凭证/状态 ───
+oauth2-proxy/*.env
+oauth2-proxy/*.secret
+
+# ─── Caddy 自动签发的证书与 ACME 账户 ───
+caddy-data/
+
+# ─── 各服务数据卷 ───
+/data/

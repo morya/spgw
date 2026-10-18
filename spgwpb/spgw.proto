@@ -1,0 +1,281 @@
+syntax = "proto3";
+
+package spgwpb;
+option go_package = "./;spgwpb";
+
+
+// 关键词过滤
+service Spgw {
+    rpc Greeting(HelloReq) returns (HelloRsp) {}
+}
+
+service Cmcenter {
+    rpc BindAccount(BindAccountReq) returns (BindAccountRsp) {}
+    rpc AllocSendBudget(AllocSendBudgetReq) returns (AllocSendBudgetRsp) {}
+}
+
+message HelloReq {
+    string name = 1;
+}
+
+message HelloRsp {
+    string msg = 1;
+}
+
+enum NodeType {
+    NodeTypeUnknown = 0;
+    NodeTypeIAgent  = 1;
+    NodeTypeOAgent  = 2;
+    NodeTypeServer  = 3;
+    NodeTypeApi     = 4;
+    NodeTypePortal  = 5;
+}
+
+enum MsgSource {
+    MsgSrcUnknown = 0;
+    MsgSrcTCP     = 1; // CMPP 长连接接入
+    MsgSrcHTTP    = 2; // HTTP API 接入
+}
+
+enum CmdID  {
+    CmdUnknown       = 0;
+    CmdActiveTestReq = 1;
+    CmdBindReq       = 2;
+    CmdSubmitReq     = 3;
+    CmdDeliverReq    = 4;
+    CmdReportReq     = 5; // 保留中，不一定用得到
+    CmdTerminateReq  = 6; // 0x8006;
+    
+    CmdActiveTestAck = 0x8001;
+    CmdBindAck       = 0x8002;
+    CmdSubmitAck     = 0x8003;
+    CmdDeliverAck    = 0x8004;
+    CmdReportAck     = 0x8005; // 保留中，不一定用得到
+    CmdTerminateAck  = 0x8006;
+
+
+    // 系统内部用的指令
+    CmdReloadIAccount   = 0x7f000001;
+    CmdReloadOAccount   = 0x7f000002;
+    CmdReloadALLAccount = 0x7f000003;
+
+    CmdDeleteIAccount = 0x7f000004;
+    CmdDeleteOAccount = 0x7f000005;
+    CmdDeleteILink    = 0x7f000006;
+    CmdDeleteOLink    = 0x7f000007;
+
+    CmdReloadOLink = 0x7f000008;
+    CmdReloadILink = 0x7f000009;
+
+    CmdBindIAccount      = 0x7f000080;
+    CmdCallbackReportReq = 0x7f000081; // 下游 HTTP callback 状态报告
+}
+
+// 话单类型枚举（数字对应原 CMPP 业务话单编号约定）
+enum BillType {
+    BillUnknown = 0;
+    Bill60      = 60; // submitReq 入口话单（SP -> spgw）
+    Bill62      = 62; // submitAck 话单（spgw -> oaccount -> SP）
+    Bill63      = 63; // reportReq 话单（oaccount -> spgw -> SP）
+}
+
+message Head {
+    CmdID  command_id = 1;
+    uint32 seq_id     = 2;
+    uint32 status     = 4;
+
+    NodeType from_node_type  = 6;
+    uint32   from_node_id    = 7;
+    uint32   from_account_id = 8;
+    string   from_spid       = 9;
+    NodeType to_node_type    = 10;
+    uint32   to_node_id      = 11;
+    string   to_spid         = 12;
+    uint32   to_account_id   = 13;
+    uint32   from_link_id    = 14;
+    uint32   to_link_id      = 15;
+
+    uint32 retry_count         = 16;
+    uint64 last_retry_ts_milli = 17;
+    
+    int64 recv_time = 18; // 消息进入spgw的时间
+
+    MsgSource source = 19; // 消息来源标记：TCP(CMPP) / HTTP API
+}
+
+message ReloadIAccountReq {
+    uint32 account_id = 1;
+}
+
+
+message BindAccountReq {
+    string spid                 = 2;
+    bytes  authenticator_source = 3;
+    string ip_address           = 4;
+    uint32 timestamp            = 5;
+}
+
+message BindAccountRsp {
+    string spid                 = 3;
+    string password             = 4;
+    bytes  authenticator_ismg   = 5;
+    bytes  authenticator_source = 6; // from req msg
+}
+
+message AllocSendBudgetReq {
+    string node_id = 1;
+}
+
+message AllocSendBudgetRsp {
+    int32 budget = 1;
+}
+
+message ActiveTestReq {
+    Head head = 1;
+}
+
+message ActiveTestRsp {
+    Head head = 1;
+}
+
+message SubmitReq {
+    uint64 local_msg_id            = 1;
+    uint64 msg_id                  = 2;
+    string sp_msg_id               = 3; // 上游SP的msgid 本地不做任何处理，仅保存
+    uint32 pk_total                = 4;
+    uint32 pk_number               = 5;
+    uint32 registered_delivery     = 6; // RegisteredDelivery
+    uint32 org_registered_delivery = 7; // RegisteredDelivery
+    uint32 msg_level               = 8;
+    string service_id              = 9;
+    uint32 fee_user_type           = 10;
+    string fee_terminal_id         = 11;
+    uint32 fee_terminal_type       = 12;
+    uint32 tp_pid                  = 13;
+    uint32 tp_udhi                 = 14;
+    uint32 msg_fmt                 = 15;
+
+    string msg_src    = 16;
+    string fee_type   = 17;
+    string fee_code   = 18;
+    string valid_time = 19;
+    string at_time    = 20;
+    string src_id     = 21;
+
+    uint32          dest_usr_tl        = 22;
+    repeated string dest_terminal_id   = 23;
+    uint32          dest_terminal_type = 24;
+    uint32          msg_length         = 25; // may not be used
+    bytes           msg_content        = 26; // we don't care about the content
+    string          link_id            = 27;
+}
+
+message SubmitAck {
+    uint64 msg_id = 1;
+    uint32 result = 2;
+}
+
+message DeliverBase {
+    uint64 msg_id     = 1;
+    string dest_id    = 2;
+    string service_id = 3;
+
+    uint32 tp_pid  = 4;
+    uint32 tp_udhi = 5;
+    uint32 msg_fmt = 6;
+
+    string src_terminal_id   = 7;
+    uint32 src_terminal_type = 8;
+
+    uint32 registered_delivery = 9;
+
+}
+
+message DeliverReq {
+    DeliverBase deliver_base = 1;
+
+    uint32 msg_length  = 2;
+    bytes  msg_content = 3;
+    string link_id     = 4;
+}
+
+message DeliverAck {
+    uint64 msg_id = 1;
+    uint32 result = 2;
+}
+
+message ReportReq {
+    DeliverBase deliver_base = 1;
+
+    uint64 msg_id           = 2;
+    string stat             = 4; // 状态报告结果：DELIVRD/EXPIRED/DELETED/ACCEPTD/UNKNOWN/REJECTD
+    string submit_time      = 5; // 提交时间 YYMMDDHHMM
+    string done_time        = 6; // 完成时间 YYMMDDHHMM
+    string dest_terminal_id = 7; // 目标终端 MSISDN
+    uint32 smsc_sequence    = 8; // SMSC 状态报告序号
+}
+
+message ReportAck {
+    uint64 msg_id = 1;
+    uint32 result = 2;
+}
+
+
+message CreateIAccountReq {
+    uint32 account_id = 1;
+}
+
+// 集群内部通信消息
+message DeleteIAccountReq {
+    uint32 account_id = 1;
+}
+
+message DeleteOAccountReq {
+    uint32 account_id = 1;
+}
+
+message DeleteILinkReq {
+    uint32 link_id = 1;
+}
+
+message DeleteOLinkReq {
+    uint32 account_id = 1;
+    uint32 link_id    = 2;
+}
+
+
+message Msg {
+    Head  head    = 1;
+    bytes raw_msg = 2;
+
+    ReloadIAccountReq reload_iaccount_req = 3;
+    BindAccountReq    bind_account_req    = 4;
+    BindAccountRsp    bind_account_rsp    = 5;
+
+    SubmitReq  submit_req  = 6;
+    SubmitAck  submit_ack  = 7;
+    DeliverReq deliver_req = 8;
+    DeliverAck deliver_ack = 9;
+    ReportReq  report_req  = 10;
+    ReportAck  report_ack  = 11;
+
+    CreateIAccountReq create_iaccount_req = 12;
+    DeleteIAccountReq delete_iaccount_req = 13;
+
+    DeleteOAccountReq delete_oaccount_req = 14;
+
+    DeleteILinkReq delete_ilink_req = 15;
+    DeleteOLinkReq delete_olink_req = 16;
+
+    BillRecord bill_record = 32; // 仅 spgw.bill topic 上使用
+}
+
+// 话单包装消息，由 server 在三个时机构造并 publish 到 spgw.bill
+message BillRecord {
+    BillType bill_type      = 1; // 话单类型
+    uint32   err_code       = 2; // 60 话单：路由失败/限流/空链路等错误码；62：submitAck.Head.Status；63：0
+    int64    bill_time      = 3; // server 构造本记录的时间戳（UnixMilli）
+    uint32   from_node_id   = 4; // server 节点 ID，billdumper 据此分目录落盘
+    Msg      original_msg   = 5; // 事件本身：60=submitReq / 62=submitAck / 63=reportReq
+    Msg      org_submit_msg = 6; // 62/63 话单携带的原始 submitReq（60 话单为 nil）
+}

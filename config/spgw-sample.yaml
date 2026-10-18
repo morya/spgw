@@ -1,0 +1,45 @@
+agent:
+  max_concurrency: 1100
+  heartbeat_interval: 15
+  link_queue_cap: 2048
+  app_queue_cap: 10240
+  write_timeout: 10s
+
+server:
+  sp_gw_id: 1234
+  route_mode: 1
+  max_concurrency: 3000
+  wait_ack_timeout: 5m
+  wait_rpt_timeout: 1h
+  max_wait_ack: 100000
+  max_wait_rpt: 100000
+  app_queue_cap: 10240
+  stat_flush_interval: 30s
+
+billdumper:
+  output_path: /data/bills/
+  max_file_size_mb: 100
+  max_backups: 30
+  max_age_days: 30
+  compress: true
+  sp_rotate_interval_sec: 300
+
+db:
+  user: root
+  password: changeme
+  address: "localhost:3606"
+  sid: "spgw"
+  timezone: "Asia/Shanghai"
+
+nats:
+  address: "localhost:4222,localhost:4223"
+  max_reconnects: -1
+  reconnect_wait: 2s
+  timeout: 2s
+
+redis_address: "localhost:6379"
+
+etcd:
+  auto_sync_interval: 30s
+  endpoints:
+    - "localhost:2379"

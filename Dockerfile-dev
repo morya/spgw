@@ -1,0 +1,10 @@
+FROM m.daocloud.io/docker.io/debian:bookworm
+
+ADD ./base-docker/sources.list /etc/apt/sources.list
+RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && apt update && apt install -y ca-certificates \
+    && apt clean
+
+ADD ./app /app
+
+CMD ["/app", "iagent"]

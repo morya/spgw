@@ -1,0 +1,34 @@
+.vscode/
+.idea/
+t/*
+swagger-ui/
+config.json
+/app
+/spgw
+tmp/
+logs/
+vendor/
+__debug_*
+/spclient
+/stub/spclient/spclient
+/http-server
+/stub/http-server/http-server
+
+x.html
+result.txt
+config.yaml
+.codegraph/
+
+# portal 本地配置（含 redis 地址/jwt signkey，不入库；config.example.yml 作为模板入库）
+config/config.yml
+stub/spclient/spclient_test
+
+# air 热重载环境变量（本地开发用，不入库）
+.env
+.omo/
+stub/spclient/test_result.txt
+config/spgw.yaml
+
+.opencode/
+.sisyphus/
+.trae/

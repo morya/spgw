@@ -1,0 +1,115 @@
+networks:
+  eagle:
+    name: spgw
+
+services:
+  valkey:
+    restart: always
+    hostname: valkey
+    networks:
+      - spgw
+    image: valkey/valkey:9-alpine3.23
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_AOF_ENABLED=no
+      - VALKEY_AOF_ENABLED=no
+    volumes:
+      - ./valkey.conf:/usr/local/etc/valkey/valkey.conf
+      - /data/valkey-data:/data:rw
+    ports:
+      - 6379:6379
+
+  mariadb:
+    image: mariadb:11.4
+    restart: always
+    networks:
+      - spgw
+    ports:
+      - 3306:3306
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    environment:
+      MARIADB_DATABASE: spgw
+      MARIADB_USER: root
+      MARIADB_PASSWORD: changeme
+      MARIADB_ROOT_PASSWORD: changeme
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
+      MARIADB_COLLATION: utf8mb4_unicode_ci
+      MARIADB_SET_TIMEZONE: 08:00
+
+  etcd:
+    restart: always
+    networks:
+      - spgw
+    image: m.daocloud.io/quay.io/coreos/etcd:v3.6.6
+    ports:
+      - 2379:2379
+      - 2380:2380
+    environment:
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379,http://127.0.0.1:2379
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd:2380
+      - ETCD_NAME=default
+      - ETCD_INITIAL_CLUSTER=default=http://etcd:2380
+      - ETCD_DATA_DIR=/etcd-data
+    volumes:
+      - etcd-data:/etcd-data
+
+  nats:
+    restart: always
+    hostname: nats
+    networks:
+      - spgw
+    image: m.daocloud.io/docker.io/nats:2.12.2-alpine3.22
+    command:
+      - "-c"
+      - "/etc/nats/nats-server.conf"
+    ports:
+      - 4222:4222
+      - 8222:8222
+    volumes:
+      - ./nats-server.conf:/etc/nats/nats-server.conf:ro
+      - nats-jetstream:/data/jetstream
+
+  es:
+    image: m.daocloud.io/docker.io/library/elasticsearch:7.17.23
+    restart: always
+    environment:
+      - node.name=es
+      - cluster.name=es-docker-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms256m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - spgw
+
+  kibana:
+    image: m.daocloud.io/docker.io/library/kibana:7.17.23
+    restart: always
+    environment:
+      - "ELASTICSEARCH_HOSTS=http://es:9200"
+    networks:
+      - spgw
+    ports:
+      - 5601:5601
+
+volumes:
+  mariadb-data:
+    driver: local
+  nats-jetstream:
+    driver: local
+  esdata01:
+    driver: local
+  etcd-data:
+    driver: local
