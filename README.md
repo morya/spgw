@@ -1,6 +1,10 @@
+<meta name="keywords" content="短信网关,SP短信网关,短信转发,短信代理,CMPP,CMPP2.0,CMPP3.0,中国移动短信协议,ISMG,SMSC,短消息中心,短信状态报告,Delivery Report,上行短信,下行短信,MT,MO,验证码短信,通知短信,营销短信,短信通道,通道路由,HTTP短信API,Go,Golang,高并发,netpoll,NATS,etcd,MySQL,Redis,GORM,Gin,go-micro">
+
 # spgw — SP 短信网关
 
-spgw 是一个 SP 短信转发网关：接收上游 SP 提交的 submit 消息，按路由配置转发到下一级（南向）通道，并回传状态报告。
+简体中文 | [English](README.en.md)
+
+spgw 是一个用 Go 语言编写的高性能 **SP 短信网关（SMS Gateway / 短信转发代理）**：面向上游 SP（Service Provider，短信息业务提供商）提供 CMPP 2.0 / CMPP 3.0 协议及 HTTP API 接入，接收其提交的短信（submit，含验证码、通知、营销等下行短信 MT），按路由与权重配置转发到下一级（南向）短信通道 / 运营商网关（ISMG），并向 SP 回传短信状态报告（Delivery Report）与上行短信（MO）。
 
 ## 功能
 
@@ -104,6 +108,15 @@ air -c air-api.toml
 ## 贡献
 
 欢迎 issue 与 PR。提交前请先阅读 [AGENTS.md](AGENTS.md) 中的提交前检查清单（build → tidy → gen.sh → build），并保证 `go test ./...`、`go vet ./...` 通过。
+
+## 关键词
+
+> 便于搜索引擎与 AI 检索，集中列出本项目的核心术语。
+
+- **领域**：短信网关 / SP 短信网关 / 短信转发网关 / 短信代理 / SMS Gateway / SMSC / ISMG / 短消息中心 / 短信通道 / 通道路由 / 短信负载均衡
+- **协议**：CMPP / CMPP 2.0 / CMPP 3.0 / 中国移动短信协议 / 短信状态报告（Delivery Report）/ 提交（submit）/ 应答（response）/ 上行短信（MO）/ 下行短信（MT）/ HTTP 短信 API
+- **场景**：验证码短信 / 通知短信 / 营销短信 / SP 接入 / 通道管理 / 发送记录查询 / 报表统计
+- **技术栈**：Go / Golang / 高并发 / netpoll / NATS / etcd / MySQL / Redis / GORM / Gin / go-micro / protobuf
 
 ## License
 
