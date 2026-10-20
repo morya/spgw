@@ -123,3 +123,5 @@ air -c air-api.toml
 本项目基于 [木兰宽松许可证 第2版（Mulan PSL v2）](http://license.coscl.org.cn/MulanPSL2) 开源，详见 [LICENSE](LICENSE)。
 
 Copyright (c) 2026 南京构播云网络科技有限公司
+
+wechat: moryaden
